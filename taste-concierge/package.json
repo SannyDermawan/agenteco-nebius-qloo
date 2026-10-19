@@ -1,0 +1,27 @@
+{
+  "name": "taste-concierge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An AgentEco seller agent that recommends from Qloo's taste graph and reasons with NVIDIA Nemotron on Nebius Token Factory.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=22.9" },
+  "scripts": {
+    "start": "tsx --env-file-if-exists=.env src/server.ts",
+    "seller": "tsx --env-file-if-exists=.env src/seller.ts",
+    "hire-demo": "tsx --env-file-if-exists=.env scripts/hire-demo.ts",
+    "models": "tsx --env-file-if-exists=.env scripts/list-models.ts",
+    "probe": "tsx --env-file-if-exists=.env scripts/probe-apis.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --import tsx --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@agenteco/sdk": "^0.1.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
