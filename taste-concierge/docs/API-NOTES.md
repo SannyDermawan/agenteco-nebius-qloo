@@ -18,6 +18,16 @@ Source: docs.qloo.com (Knowledge Center index, API onboarding, Insights API, Sea
 
 Not used because the docs reviewed do not describe them: tag signals, location filters, demographics, explainability. They can be added once confirmed.
 
+## How the hackathon issues access (important)
+
+Source: the Qloo hackathon kit, https://github.com/qloo/qloo-hackathon-kit (linked from the Devpost Resources tab), read 20 Oct 2026.
+
+- The credential is **event-issued and individually attributable**. The kit installs `@qloo/qloo-harness` (version 0.1.26 or newer) and stores the credential with `qloo setup --qloo`. Supported surfaces: `qloo explore`, `qloo exec`, `qloo api`, `qloo mcp`. All count against the same quota.
+- Rules from `docs/API_ACCESS.md`: do not put the credential in source control, a browser app, a public MCP configuration or a demo recording; do not share it between teams; no bulk scraping; keep retries bounded; the quota, rate limit and expiry are published by the organizers.
+- **Open question, not answered by the public kit:** whether the event credential also works as a plain `X-Api-Key` against the REST host (what `QlooClient` assumes), or only through the harness or an organizer gateway. The kit does not state a base URL. **First thing to do with the key:** run `npm run probe`. If the REST call is rejected, ask in the Qloo Discord (linked from the kit) how a deployed backend should call Qloo, and change only `src/qloo.ts`.
+- The credential stays on the server (`.env`, never sent to the browser, never in the repository or the video). The demo page talks only to this server's `/api/recommend`.
+- The kit's submission guide asks for: the Qloo workflow used and why, a **redacted** example request and result with the entity choices, a short demo, setup from a clean environment and known limitations including what the results do not prove. `docs/SUBMISSION-QLOO.md` follows that list.
+
 ## Nebius Token Factory
 
 Source: docs.tokenfactory.nebius.com (quickstart, API reference index).
