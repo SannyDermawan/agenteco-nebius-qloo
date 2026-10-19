@@ -38,7 +38,7 @@ Source: docs.tokenfactory.nebius.com (quickstart, API reference index).
 | Auth | `Authorization: Bearer $NEBIUS_API_KEY` | documented |
 | Chat | `POST /chat/completions`, OpenAI compatible. The SDK's `openAiCompatible` sends `response_format: json_object` | compatible per docs, **confirm JSON mode on the chosen model** |
 | Model list | `GET /models` ("List models API") | documented, used by `npm run models` |
-| Nemotron ids | Nebius lists Nemotron 3 Nano, Super and Ultra. Third-party catalogs show ids like `nvidia/Nemotron-3-Ultra-550b-a55b`, but Nebius's docs do not state them | **not confirmed, so the agent reads `/models` and picks, or you set `NEBIUS_MODEL_FAST` and `NEBIUS_MODEL_REASONING`** |
+| Nemotron ids | Nebius's Nemotron page (nebius.com/services/token-factory/nemotron) lists Nemotron 3 Nano 30b, Nano Omni, Super 120b and Ultra 550b, and its code sample uses the id **`nvidia/nemotron-3-super-120b-a12b`** (lowercase), the only id confirmed from Nebius itself. The Nano and Ultra ids are not shown. Third-party catalogs show ids like `nvidia/Nemotron-3-Ultra-550b-a55b`, unconfirmed | **Super is confirmed. For the rest the agent reads `/models` and picks (matching is case-insensitive), or you set `NEBIUS_MODEL_FAST` and `NEBIUS_MODEL_REASONING`. If no Ultra is listed, Super is used for both roles** |
 
 ## Live probe results
 
