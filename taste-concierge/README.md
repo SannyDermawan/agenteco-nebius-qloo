@@ -1,6 +1,6 @@
 # Taste Concierge
 
-An [AgentEco](../README.md) seller agent. A buyer describes a taste ("I loved Spirited Away and Princess Mononoke, what next?"), the agent asks the **Qloo taste graph** what people with that taste like, lets **NVIDIA Nemotron on Nebius Token Factory** choose and explain, and delivers the answer through AgentEco's escrow, with a dispute path if the buyer is unhappy.
+An [AgentEco](../AGENTECO.md) seller agent. A buyer describes a taste ("I loved Spirited Away and Princess Mononoke, what next?"), the agent asks the **Qloo taste graph** what people with that taste like, lets **NVIDIA Nemotron on Nebius Token Factory** choose and explain, and delivers the answer through AgentEco's escrow, with a dispute path if the buyer is unhappy.
 
 Built for two hackathons from one codebase: the Nebius x NVIDIA Global AI Hackathon (Nemotron on Token Factory) and the Qloo Agentic Hackathon (Qloo as the differentiator). All AgentEco money here is test money on test networks.
 
