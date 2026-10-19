@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Taste Concierge</title>
+<style>
+:root{--bg:#fbf8f5;--fg:#2a1d10;--mut:#756a5e;--card:#fff;--line:#eadfd3;--acc:#c2410c;--accfg:#fff;--ok:#0f7a4f;--warn:#9a5b00;--warnbg:#fff4dd}
+@media (prefers-color-scheme:dark){:root{--bg:#17120d;--fg:#f4ece3;--mut:#b3a698;--card:#211a13;--line:#3a2f24;--acc:#fb923c;--accfg:#1a0f05;--ok:#4ade80;--warn:#fbbf24;--warnbg:#2c2210}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 16px 80px}
+h1{font-size:2rem;margin:0 0 6px}p.lead{color:var(--mut);margin:0 0 24px}
+form{display:flex;gap:8px;flex-wrap:wrap}
+textarea{flex:1 1 100%;min-height:92px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font:inherit;resize:vertical}
+button{padding:10px 18px;border:0;border-radius:10px;background:var(--acc);color:var(--accfg);font:inherit;font-weight:600;cursor:pointer}
+button[disabled]{opacity:.6;cursor:wait}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.chip{padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--fg);font-weight:400;font-size:.9rem}
+#mode{margin:20px 0 0;padding:10px 14px;border-radius:10px;border:1px solid var(--line);font-size:.92rem}
+#mode.sample{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}
+#mode.live{color:var(--ok)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.card h3{margin:0 0 4px;font-size:1.1rem}.meta{color:var(--mut);font-size:.85rem}
+.bar{height:6px;background:var(--line);border-radius:99px;margin-top:10px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+code{font-size:.8rem;background:var(--line);padding:1px 6px;border-radius:6px}
+details{margin-top:24px;color:var(--mut)}summary{cursor:pointer}
+ul.notes{padding-left:18px}
+@media (max-width:480px){h1{font-size:1.6rem}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Taste Concierge</h1>
+  <p class="lead">Describe what you like. Recommendations come from the Qloo taste graph and are explained by NVIDIA Nemotron on Nebius Token Factory. An AgentEco seller agent, paid through escrow on a test network.</p>
+  <form id="f">
+    <label for="q" hidden>Your taste</label>
+    <textarea id="q" maxlength="500" placeholder="I loved Spirited Away and Princess Mononoke. What should I watch next?"></textarea>
+    <button id="go" type="submit">Recommend</button>
+  </form>
+  <div class="chips" id="chips"></div>
+  <div id="mode" hidden></div>
+  <div id="out" aria-live="polite"></div>
+  <details><summary>How it works</summary>
+    <p>1. A small Nemotron model reads your request. 2. Qloo resolves what you already like and returns similar entities. 3. A larger Nemotron model picks and explains. 4. The agent checks every pick against what Qloo returned, so it cannot recommend something Qloo did not give it.</p>
+  </details>
+</main>
+<script>
+const $ = (id) => document.getElementById(id)
+const examples = ['I loved Spirited Away and Princess Mononoke. What should I watch next?', 'Calm Indonesian indie music for studying', 'A coffee shop to work from, quiet and not too pricey']
+for (const e of examples) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = e.length > 44 ? e.slice(0, 42) + '...' : e
+  b.onclick = () => { $('q').value = e; $('f').requestSubmit() }
+  $('chips').append(b)
+}
+function el(tag, props = {}, ...kids) { const n = Object.assign(document.createElement(tag), props); for (const k of kids) n.append(k); return n }
+$('f').onsubmit = async (ev) => {
+  ev.preventDefault()
+  const request = $('q').value.trim()
+  if (request.length < 3) return
+  $('go').disabled = true; $('out').replaceChildren(el('p', { textContent: 'Asking Qloo and Nemotron...' }))
+  try {
+    const res = await fetch('/api/recommend', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ request }) })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Request failed')
+    render(data)
+  } catch (err) {
+    $('out').replaceChildren(el('p', { textContent: 'Error: ' + err.message }))
+  } finally { $('go').disabled = false }
+}
+function render(d) {
+  const mode = $('mode'); mode.hidden = false; mode.className = d.mode
+  mode.textContent = d.mode === 'sample' ? 'SAMPLE MODE: fixed examples, not real Qloo or Nemotron output.' : 'Live: Qloo taste graph + ' + (d.models ? d.models.reasoning : 'Nemotron')
+  const out = $('out'); out.replaceChildren(el('p', { textContent: d.summary }))
+  if (!d.recommendations.length) out.append(el('p', { className: 'meta', textContent: 'No recommendations.' }))
+  for (const r of d.recommendations) {
+    const bar = el('div', { className: 'bar' }, el('i', { style: 'width:' + Math.round(r.confidence * 100) + '%' }))
+    out.append(el('div', { className: 'card' }, el('h3', { textContent: r.name }), el('div', { className: 'meta' }, r.category + ' · Qloo id ', el('code', { textContent: r.qlooEntityId }) , ' · match ' + Math.round(r.confidence * 100) + '%'), el('p', { textContent: r.why }), bar))
+  }
+  if (d.notes && d.notes.length) out.append(el('ul', { className: 'notes' }, ...d.notes.map((n) => el('li', { textContent: n }))))
+  if (d.sources && d.sources.length) out.append(el('details', {}, el('summary', { textContent: 'Qloo calls (' + d.sources.length + ')' }), el('ul', {}, ...d.sources.map((s) => el('li', { textContent: s.kind + ': ' + s.detail })))))
+}
+fetch('/api/health').then((r) => r.json()).then((h) => { if (h.mode === 'sample') { const m = $('mode'); m.hidden = false; m.className = 'sample'; m.textContent = 'SAMPLE MODE: ' + (h.reason || 'API keys are not set') + '.' } }).catch(() => {})
+</script>
+</body>
+</html>
