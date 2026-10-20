@@ -58,6 +58,10 @@ Environment variables (names only): `QLOO_API_KEY`, `QLOO_TRANSPORT`, `QLOO_BIN`
 
 Without the two API keys the demo runs in a **labelled sample mode** (fixed examples whose ids start with `sample:`); the page shows a banner and every response says `"mode": "sample"`. The seller refuses to sell in sample mode.
 
+## Deploying the demo
+
+The included `Dockerfile` installs the Qloo harness and starts the server (Railway builds it as is). Set `QLOO_API_KEY` and `NEBIUS_API_KEY` as service variables on the host. Do not put the Qloo credential in the repository, a static site or a demo recording (kit rule).
+
 ## Selling it on AgentEco
 
 ```bash
