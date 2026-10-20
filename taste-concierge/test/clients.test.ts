@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { QlooClient, QlooError, extractEntities, normalizeEntity } from '../src/qloo.ts'
+import { QlooClient, QlooHarnessClient, QlooError, createQloo, extractEntities, normalizeEntity } from '../src/qloo.ts'
 import { pickNemotronModels, resolveModels } from '../src/llm.ts'
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
@@ -63,4 +63,34 @@ test('resolveModels uses the live model list when ids are not configured, and th
   const configured = await resolveModels({ NEBIUS_API_KEY: 'k', NEBIUS_MODEL_FAST: 'a/b', NEBIUS_MODEL_REASONING: 'c/d' } as NodeJS.ProcessEnv, (async () => assert.fail('must not list')) as unknown as typeof fetch)
   assert.deepEqual([configured.fast.id, configured.reasoning.id], ['a/b', 'c/d'])
   await assert.rejects(resolveModels({} as NodeJS.ProcessEnv), /NEBIUS_API_KEY/)
+})
+
+test('QlooHarnessClient calls `qloo api` with an argument array and keeps the key off the command line', async () => {
+  const calls: { file: string; args: string[]; keyInEnv: string | undefined }[] = []
+  const run = async (file: string, args: string[], env: NodeJS.ProcessEnv) => {
+    calls.push({ file, args, keyInEnv: env.QLOO_API_KEY })
+    return JSON.stringify({ results: [{ entity_id: 'm1', name: 'Movie' }] })
+  }
+  const client = new QlooHarnessClient({ apiKey: 'event-key', run })
+  const found = await client.searchEntities('Spirited Away"; rm -rf /', { take: 2 })
+  assert.equal(found[0]!.id, 'm1')
+  assert.deepEqual(calls[0]!.args, ['api', 'search', '--query', 'Spirited Away"; rm -rf /', '--take', '2', '--json'], 'user text is one argument, never a shell string')
+  await client.insights({ category: 'movie', seedEntityIds: ['s1', 's2'], take: 99 })
+  assert.deepEqual(calls[1]!.args, ['api', 'insights', '--type', 'urn:entity:movie', '--take', '50', '--json', '--signal-entities', 's1,s2'])
+  assert.equal(calls[1]!.keyInEnv, 'event-key')
+  assert.ok(calls.every((c) => !c.args.includes('--api-key') && !c.args.includes('event-key')), 'the key is never an argument')
+})
+
+test('QlooHarnessClient explains a missing harness and bad output', async () => {
+  const missing = new QlooHarnessClient({ run: async () => { throw Object.assign(new Error('spawn qloo ENOENT'), { code: 'ENOENT' }) } })
+  await assert.rejects(missing.searchEntities('x'), (e: unknown) => e instanceof QlooError && /npm install -g @qloo\/qloo-harness/.test(e.message))
+  const garbage = new QlooHarnessClient({ run: async () => 'not json' })
+  await assert.rejects(garbage.searchEntities('x'), /did not print JSON/)
+  const failing = new QlooHarnessClient({ run: async () => { throw Object.assign(new Error('exit 1'), { stderr: 'error: 401 unauthorized\nmore' }) } })
+  await assert.rejects(failing.insights({ category: 'movie' }), /401 unauthorized/)
+})
+
+test('createQloo picks the harness by default and REST only when asked', () => {
+  assert.ok(createQloo({ QLOO_API_KEY: 'k' }) instanceof QlooHarnessClient)
+  assert.ok(createQloo({ QLOO_API_KEY: 'k', QLOO_TRANSPORT: 'rest' }) instanceof QlooClient)
 })

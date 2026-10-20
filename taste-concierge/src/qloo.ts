@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process'
 import type { Category } from './types.ts'
 
 /** A Qloo entity, reduced to the fields this agent uses. */
@@ -88,6 +89,76 @@ export function extractEntities(body: unknown): QlooEntity[] {
   const results = asRecord(body).results
   const list = Array.isArray(results) ? results : Array.isArray(asRecord(results).entities) ? (asRecord(results).entities as unknown[]) : []
   return list.map(normalizeEntity).filter((e): e is QlooEntity => e !== null)
+}
+
+/** Runs one command and returns its stdout. A fake stands in for it in tests. */
+export type RunCommand = (file: string, args: string[], env: NodeJS.ProcessEnv, timeoutMs: number) => Promise<string>
+
+const runWithExecFile: RunCommand = (file, args, env, timeoutMs) =>
+  new Promise((resolve, reject) => {
+    // No shell: the arguments are passed as an array, so user text cannot become a command.
+    execFile(file, args, { env, timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024, windowsHide: true }, (error, stdout) => {
+      if (error) reject(error)
+      else resolve(stdout)
+    })
+  })
+
+export interface QlooHarnessOptions {
+  /** The harness binary, default `qloo` on PATH (npm install -g @qloo/qloo-harness, version 0.1.26 or newer). */
+  bin?: string
+  timeoutMs?: number
+  /** The event credential. It goes to the child process through the environment, never on the command line. */
+  apiKey?: string
+  run?: RunCommand
+}
+
+/**
+ * Calls Qloo through the event's supported surface, `qloo api` from the public @qloo/qloo-harness package (the
+ * kit's API_ACCESS.md lists it, with `qloo exec` and `qloo mcp`, as the only supported way). `qloo api ... --json`
+ * prints the raw API response, so the same normalisation as the REST client applies.
+ */
+export class QlooHarnessClient implements QlooLike {
+  private readonly bin: string
+  private readonly run: RunCommand
+
+  constructor(private readonly options: QlooHarnessOptions = {}) {
+    this.bin = options.bin || 'qloo'
+    this.run = options.run ?? runWithExecFile
+  }
+
+  async searchEntities(query: string, opts: { take?: number } = {}): Promise<QlooEntity[]> {
+    return extractEntities(await this.call(['api', 'search', '--query', query, '--take', String(opts.take ?? 3), '--json']))
+  }
+
+  async insights(opts: { category: Category; seedEntityIds?: string[]; take?: number }): Promise<QlooEntity[]> {
+    const args = ['api', 'insights', '--type', QLOO_TYPE[opts.category], '--take', String(Math.min(opts.take ?? 8, 50)), '--json']
+    if (opts.seedEntityIds?.length) args.push('--signal-entities', opts.seedEntityIds.join(','))
+    return extractEntities(await this.call(args))
+  }
+
+  private async call(args: string[]): Promise<unknown> {
+    const env: NodeJS.ProcessEnv = { ...process.env }
+    if (this.options.apiKey) env.QLOO_API_KEY = this.options.apiKey
+    let out: string
+    try {
+      out = await this.run(this.bin, args, env, this.options.timeoutMs ?? 30_000)
+    } catch (error) {
+      const e = error as NodeJS.ErrnoException & { stderr?: string }
+      if (e.code === 'ENOENT') throw new QlooError(`The Qloo harness (${this.bin}) is not installed. Run: npm install -g @qloo/qloo-harness`)
+      throw new QlooError(`qloo ${args[1]} failed: ${(e.stderr || e.message || '').toString().split('\n')[0]}`)
+    }
+    try {
+      return JSON.parse(out)
+    } catch {
+      throw new QlooError(`qloo ${args[1]} did not print JSON.`)
+    }
+  }
+}
+
+/** Harness by default (the supported route); `QLOO_TRANSPORT=rest` uses the direct client below. */
+export function createQloo(env: NodeJS.ProcessEnv = process.env): QlooLike {
+  if (env.QLOO_TRANSPORT === 'rest') return new QlooClient({ apiKey: env.QLOO_API_KEY ?? '', baseUrl: env.QLOO_BASE_URL })
+  return new QlooHarnessClient({ bin: env.QLOO_BIN, apiKey: env.QLOO_API_KEY })
 }
 
 export class QlooClient implements QlooLike {

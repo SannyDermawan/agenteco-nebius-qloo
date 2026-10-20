@@ -10,7 +10,7 @@ Existed before (the tag `pre-nebius-qloo`, 150 commits since 24 Sep 2026, see th
 AgentEco itself: escrow and dispute contracts, the arbiter, reputation, the SDK, backend, CLI and website.
 
 New in this folder (`taste-concierge/`, commits after the tag):
-- `src/qloo.ts`: Qloo client (search and insights, retries, normalisation)
+- `src/qloo.ts`: Qloo through the official harness (`qloo api search` and `qloo api insights`, the route the event kit supports), a direct REST client behind `QLOO_TRANSPORT=rest`, and the normalisation
 - `src/llm.ts`: Nemotron on Token Factory through the SDK's `openAiCompatible`, with model discovery
 - `src/agent.ts`: the agent pipeline and its verification step
 - `src/seller.ts`: the AgentEco seller wrapper (`taste_recommendations`)
@@ -46,6 +46,7 @@ public demo: browser -> server.ts -> agent.ts (same code, no escrow)
 ```bash
 cd taste-concierge
 npm install
+npm install -g @qloo/qloo-harness   # the supported way to reach Qloo (0.1.26 or newer)
 cp .env.example .env     # then fill QLOO_API_KEY and NEBIUS_API_KEY (names only here)
 npm run models           # lists Nemotron models for your key
 npm run probe            # three real calls to each service
@@ -53,7 +54,7 @@ npm start                # demo on http://localhost:8787
 npm test                 # 16 tests, no network or keys needed
 ```
 
-Environment variables (names only): `QLOO_API_KEY`, `QLOO_BASE_URL`, `NEBIUS_API_KEY`, `NEBIUS_BASE_URL`, `NEBIUS_MODEL_FAST`, `NEBIUS_MODEL_REASONING`, `PORT`, `TASTE_MODE`, and for the AgentEco scripts `WALLET_PRIVATE_KEY`, `BUYER_PRIVATE_KEY`, `AGENTECO_API_URL`.
+Environment variables (names only): `QLOO_API_KEY`, `QLOO_TRANSPORT`, `QLOO_BIN`, `QLOO_BASE_URL`, `NEBIUS_API_KEY`, `NEBIUS_BASE_URL`, `NEBIUS_MODEL_FAST`, `NEBIUS_MODEL_REASONING`, `PORT`, `TASTE_MODE`, and for the AgentEco scripts `WALLET_PRIVATE_KEY`, `BUYER_PRIVATE_KEY`, `AGENTECO_API_URL`.
 
 Without the two API keys the demo runs in a **labelled sample mode** (fixed examples whose ids start with `sample:`); the page shows a banner and every response says `"mode": "sample"`. The seller refuses to sell in sample mode.
 
@@ -69,7 +70,7 @@ Registering a capability writes to the shared AgentEco API, so it is a deliberat
 ## Honest status
 
 - The code, tests and demo are complete and pass without network access.
-- At the time of writing no Qloo or Nebius key was available, so the live calls follow the documentation but have not been exercised: `docs/API-NOTES.md` lists exactly what is confirmed and what is assumed. Run `npm run probe` first.
+- At the time of writing no Qloo or Nebius key was available, so the live calls follow the documentation but have not been exercised. The harness commands used here (`qloo api search`, `qloo api insights`) were checked against `--help` and `--dry-run` of @qloo/qloo-harness 0.1.26, not against Qloo: `docs/API-NOTES.md` lists exactly what is confirmed and what is assumed. Run `npm run probe` first.
 - The escrow cycle (`seller` and `hire-demo`) has not been run yet for the same reason.
 
 License: MIT (see the repository `LICENSE`).

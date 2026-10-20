@@ -1,6 +1,6 @@
 import { recommend, heuristicIntent } from './agent.ts'
 import { resolveModels } from './llm.ts'
-import { QlooClient } from './qloo.ts'
+import { createQloo } from './qloo.ts'
 import { sampleResult } from './fixtures.ts'
 import type { Brief, TasteResult } from './types.ts'
 
@@ -21,7 +21,7 @@ export async function createEngine(env: NodeJS.ProcessEnv = process.env): Promis
   if (!env.QLOO_API_KEY || !env.NEBIUS_API_KEY) return sampleEngine('QLOO_API_KEY or NEBIUS_API_KEY is not set')
   try {
     const models = await resolveModels(env)
-    const qloo = new QlooClient({ apiKey: env.QLOO_API_KEY, baseUrl: env.QLOO_BASE_URL })
+    const qloo = createQloo(env)
     return {
       mode: 'live',
       async run(brief) {
