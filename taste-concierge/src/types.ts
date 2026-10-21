@@ -4,6 +4,9 @@ import { z } from 'zod'
 export const CATEGORIES = ['movie', 'tv_show', 'artist', 'place', 'book', 'brand', 'podcast', 'videogame'] as const
 export type Category = (typeof CATEGORIES)[number]
 
+/** The live multi-chain AgentEco API (serves Solana devnet). The SDK's built-in default is the older BNB-only edition. */
+export const AGENTECO_API_URL = 'https://agenteco-multichain-production.up.railway.app'
+
 export const briefSchema = z.object({
   request: z.string().min(3).max(500),
   /** Optional: how many recommendations to return (1 to 10). */

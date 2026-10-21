@@ -2,13 +2,16 @@
 // the buyer escrows a small amount, the seller delivers, the buyer checks the result and settles.
 // The seller must be running (npm run seller). Usage: BUYER_PRIVATE_KEY=<Solana secret key or 0x... EVM key> npm run hire-demo
 // Keys come from the environment and are never printed. Prints the transaction-related ids for the README.
-import { hire, DEFAULT_API_URL } from '@agenteco/sdk'
-import { CAPABILITY_ID, recommendationSchema } from '../src/types.ts'
+import { hire } from '@agenteco/sdk'
+import { AGENTECO_API_URL, CAPABILITY_ID, recommendationSchema } from '../src/types.ts'
 import { z } from 'zod'
+import { configureChainsFromApi } from '../src/chains.ts'
 import { parseWalletKey } from '../src/wallet-key.ts'
 
 const privateKey = parseWalletKey(process.env.BUYER_PRIVATE_KEY, 'BUYER_PRIVATE_KEY')
-const apiUrl = process.env.AGENTECO_API_URL ?? DEFAULT_API_URL
+const apiUrl = process.env.AGENTECO_API_URL?.trim() || AGENTECO_API_URL
+
+await configureChainsFromApi(apiUrl)
 
 const result = await hire({
   privateKey,

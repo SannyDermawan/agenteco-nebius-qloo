@@ -145,3 +145,18 @@ test('parseWalletKey accepts an EVM key, a base58 Solana key and a JSON array, a
   assert.throws(() => parseWalletKey('abc'), /must be an EVM key/)
   assert.throws(() => parseWalletKey('not*base58'), /not valid base58/)
 })
+
+test('configureChainsFromApi sets the Solana program and mint from /chains, keeps values already set, ignores EVM chains', async () => {
+  const { configureChainsFromApi } = await import('../src/chains.ts')
+  const body = [
+    { chainId: 'eip155:97', family: 'evm', agentEco: '0xabc', token: { address: '0xdef' } },
+    { chainId: 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', family: 'solana', agentEco: 'ProgramAddr', token: { address: 'MintAddr' } },
+  ]
+  const fetchImpl = (async () => new Response(JSON.stringify(body))) as unknown as typeof fetch
+  const env: NodeJS.ProcessEnv = { TOKEN_MINT__solana_EtWTRABZaYq6iMfeYKouRu166VU2xqa1: 'MyMint' }
+  const done = await configureChainsFromApi('https://api.example/', env, fetchImpl)
+  assert.deepEqual(done, ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1'])
+  assert.equal(env.AGENT_ECO_PROGRAM__solana_EtWTRABZaYq6iMfeYKouRu166VU2xqa1, 'ProgramAddr')
+  assert.equal(env.TOKEN_MINT__solana_EtWTRABZaYq6iMfeYKouRu166VU2xqa1, 'MyMint', 'a value already set wins')
+  assert.equal(Object.keys(env).some((k) => k.includes('eip155')), false)
+})

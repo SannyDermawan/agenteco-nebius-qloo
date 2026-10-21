@@ -65,7 +65,7 @@ Without keys the demo runs in a **labelled sample mode** (fixed examples, ids th
 
 - Code, tests and demo are complete and pass without network access.
 - **Both services have been called for real (21 Oct 2026).** Qloo (hackathon key): entity search, Insights with a movie seed (Spirited Away gave Howl's Moving Castle, My Neighbor Totoro, Princess Mononoke), a cross-domain call (movie seed, book results). Nebius Token Factory: 28 models listed, 5 Nemotron, and the agent picked `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (fast) and `nvidia/Nemotron-3-Ultra-550b-a55b` (reasoning). The whole agent ran end to end on two requests (movies from Ghibli seeds; artists and books from Radiohead and Beck, about 10 and 18 seconds); every recommendation came from Qloo's own list. What each check found, and the bugs it exposed, is in `taste-concierge/docs/API-NOTES.md`.
-- The escrow cycle (`seller` and `hire-demo`) has not been run yet: it needs a funded testnet wallet.
+- The escrow cycle ran for real on **Solana devnet** (21 Oct 2026): the Taste Concierge seller (wallet `3PnvSWL5...ZajyFX`) was listed on the live multi-chain API, a buyer wallet hired it, the price was negotiated (offered 0.04, the seller asked 0.07, counter 0.05, the seller asked 0.06, accepted), escrow #6 was funded in devnet USDC, the seller delivered four recommendations, the buyer's own check (schema, Qloo entity ids present, live mode) accepted, and the escrow settled with 0.06 USDC paid to the seller. The command that does this is `npm run seller` and `npm run hire-demo`; it also registered the `taste_recommendations` capability in the shared registry.
 - AgentEco runs on test networks only, no real money, and has no real users outside the team.
 
 ## Project history
