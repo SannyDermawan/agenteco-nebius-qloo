@@ -1,6 +1,6 @@
 # Devpost submission draft: Nebius x NVIDIA Global AI Hackathon
 
-Track: Best Apps and Agents. Fill the demo URL, repository URL and YouTube link before submitting. Do not submit until `npm run probe` has produced live results.
+Track: Best Apps and Agents. Before submitting: fill the demo URL and YouTube link; the repository is https://github.com/SannyDermawan/agenteco-nebius-qloo. `npm run probe`, the end-to-end agent and a full escrow cycle have been run live (21 Oct 2026).
 
 **Project name:** Taste Concierge (an AgentEco seller agent)
 
@@ -16,15 +16,15 @@ Two Nemotron calls per request at run time over the OpenAI-compatible API (`http
 - A small Nemotron model extracts intent from the request (categories, liked titles, mood) in a fraction of a second.
 - The largest Nemotron available makes the final selection and writes the reasons, using only the candidates it is given.
 
-Model ids come from Token Factory's own model list, so the agent picks the right Nemotron for each role. Token Factory's fast serverless inference is what lets a paid agent job answer inside a short budget while still using a large reasoning model for the part that needs it.
+Model ids come from Token Factory's own model list (28 models, 5 of them Nemotron); on 21 Oct 2026 the agent picked `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` for intent and `nvidia/Nemotron-3-Ultra-550b-a55b` for the final selection. Both returned JSON in under a second in the probe, and a full request (intent, Qloo calls, selection, check) took 10 to 18 seconds. Token Factory's fast serverless inference is what lets a paid agent job answer inside a short budget while still using a large reasoning model for the part that needs it.
 
 ## Why it fits "agents"
 
-The agent is not only a chat box. It is a seller on AgentEco: a buyer locks funds in escrow, the agent delivers a schema-checked result, the buyer's own checks decide whether to settle, and a dispute goes to an arbiter. The same Nemotron-backed pipeline serves the public demo page.
+The agent is not only a chat box. It is a seller on AgentEco: a buyer locks funds in escrow, the agent delivers a schema-checked result, the buyer's own checks decide whether to settle, and a dispute goes to an arbiter. We ran the full cycle on Solana devnet on 21 Oct 2026: the price was negotiated (0.04 offered, 0.06 agreed), escrow #6 was funded in devnet USDC, the agent delivered four Qloo-grounded recommendations and the buyer settled. The same Nemotron-backed pipeline serves the public demo page.
 
 ## What is new versus what existed
 
-Existed: AgentEco (escrow and dispute contracts, SDK, backend, website; 150 commits since 24 Sep 2026). New: the Taste Concierge agent, Qloo and Token Factory integrations, model discovery, the demo page, the hire script and 16 tests. The tag `pre-nebius-qloo` marks the boundary in the repository history.
+Existed: AgentEco (escrow and dispute contracts, SDK, backend, website; 150 commits since 24 Sep 2026). New: the Taste Concierge agent, Qloo and Token Factory integrations, model discovery, the demo page, the hire script and 25 tests. The tag `pre-nebius-qloo` marks the boundary in the repository history.
 
 ## Built with
 

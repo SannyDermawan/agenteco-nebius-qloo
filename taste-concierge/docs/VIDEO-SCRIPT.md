@@ -1,6 +1,6 @@
 # Video script (under 3 minutes, one video for both hackathons)
 
-Record after the live probe works, with the keys in `.env`, so the demo is live and not sample mode. Show the "Live" banner, not the sample banner.
+The live probe works (21 Oct 2026): record with the keys in `.env` so the demo is live and not sample mode, and show the "Live" banner, not the sample banner. Never show the keys, the `.env` file or the Qloo key in a screen recording (Qloo kit rule).
 
 | Time | On screen | Say |
 |---|---|---|
