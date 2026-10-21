@@ -19,3 +19,14 @@ export async function configureChainsFromApi(apiUrl: string, env: NodeJS.Process
   }
   return configured
 }
+
+/**
+ * The AgentEco API the seller and the buyer talk to. There is deliberately no default: the SDK's built-in default is an
+ * old edition that no longer exists, and a shared production API should only be used on purpose. Point it at your own
+ * AgentEco backend (for example a local one) with AGENTECO_API_URL.
+ */
+export function requireApiUrl(env: NodeJS.ProcessEnv = process.env): string {
+  const url = env.AGENTECO_API_URL?.trim()
+  if (!url) throw new Error('Set AGENTECO_API_URL in .env to the AgentEco API to use (your own backend). There is no default on purpose.')
+  return url
+}

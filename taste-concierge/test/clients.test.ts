@@ -160,3 +160,10 @@ test('configureChainsFromApi sets the Solana program and mint from /chains, keep
   assert.equal(env.TOKEN_MINT__solana_EtWTRABZaYq6iMfeYKouRu166VU2xqa1, 'MyMint', 'a value already set wins')
   assert.equal(Object.keys(env).some((k) => k.includes('eip155')), false)
 })
+
+test('requireApiUrl has no default and says so', async () => {
+  const { requireApiUrl } = await import('../src/chains.ts')
+  assert.throws(() => requireApiUrl({}), /no default on purpose/)
+  assert.throws(() => requireApiUrl({ AGENTECO_API_URL: '  ' }), /no default on purpose/)
+  assert.equal(requireApiUrl({ AGENTECO_API_URL: ' http://localhost:8788 ' }), 'http://localhost:8788')
+})

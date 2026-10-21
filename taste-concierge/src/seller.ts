@@ -1,8 +1,8 @@
 import { createSellerAgent, registerCapability, resolveCapability } from '@agenteco/sdk'
 import { createEngine } from './engine.ts'
-import { configureChainsFromApi } from './chains.ts'
+import { configureChainsFromApi, requireApiUrl } from './chains.ts'
 import { parseWalletKey } from './wallet-key.ts'
-import { AGENTECO_API_URL, briefSchema, CAPABILITY_ID } from './types.ts'
+import { briefSchema, CAPABILITY_ID } from './types.ts'
 
 /**
  * Sells "taste_recommendations" on AgentEco: a buyer escrows a small amount, this agent answers from Qloo's taste graph with
@@ -14,7 +14,7 @@ import { AGENTECO_API_URL, briefSchema, CAPABILITY_ID } from './types.ts'
  * script is something the maintainer runs on purpose; it is never run by the tests or the demo server.
  */
 const privateKey = parseWalletKey(process.env.WALLET_PRIVATE_KEY)
-const apiUrl = process.env.AGENTECO_API_URL?.trim() || AGENTECO_API_URL
+const apiUrl = requireApiUrl()
 
 await configureChainsFromApi(apiUrl)
 const engine = await createEngine()

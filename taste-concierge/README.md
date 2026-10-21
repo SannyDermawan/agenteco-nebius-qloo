@@ -69,7 +69,7 @@ WALLET_PRIVATE_KEY=<key> npm run seller      # testnet wallet; registers the cap
 BUYER_PRIVATE_KEY=<key> npm run hire-demo    # a buyer hires it, checks the result, settles
 ```
 
-Keys are a Solana secret key (base58 or a JSON array) for Solana devnet, or `0x...` for an EVM chain. Solana devnet needs a little SOL for gas and devnet USDC from https://faucet.circle.com. The app uses the SDK in `../agent-runtime` (a `file:` dependency) because the published 0.1.2 package predates Solana support. Registering a capability writes to the shared AgentEco API, so it is a deliberate, manual step.
+Keys are a Solana secret key (base58 or a JSON array) for Solana devnet, or `0x...` for an EVM chain. Solana devnet needs a little SOL for gas and devnet USDC from https://faucet.circle.com. The app uses the SDK in `../agent-runtime` (a `file:` dependency) because the published 0.1.2 package predates Solana support. `AGENTECO_API_URL` must be set (no default): it is the AgentEco API the seller and the buyer talk to, ideally your own backend, because registering a capability and negotiating write to it. The first full cycle (below) was run once against the maintainer's own multi-chain API; keep usage of a shared API low.
 
 ## Honest status
 
