@@ -28,14 +28,15 @@ export class QlooError extends Error {
 
 export interface QlooOptions {
   apiKey: string
-  /** Default https://api.qloo.com (see docs/API-NOTES.md). */
+  /** Default https://hackathon.api.qloo.com, the only host the hackathon key works against (see docs/API-NOTES.md). */
   baseUrl?: string
   timeoutMs?: number
   retries?: number
   fetchImpl?: typeof fetch
 }
 
-const DEFAULT_BASE = 'https://api.qloo.com'
+/** Hackathon keys only work here; staging and production answer 401 (docs.qloo.com hackathon developer guide). */
+const DEFAULT_BASE = 'https://hackathon.api.qloo.com'
 
 /** Qloo's urn type for each category. */
 export const QLOO_TYPE: Record<Category, string> = {
@@ -46,7 +47,7 @@ export const QLOO_TYPE: Record<Category, string> = {
   book: 'urn:entity:book',
   brand: 'urn:entity:brand',
   podcast: 'urn:entity:podcast',
-  videogame: 'urn:entity:videogame',
+  videogame: 'urn:entity:video_game',
 }
 
 type Json = Record<string, unknown>
@@ -76,7 +77,8 @@ export function normalizeEntity(raw: unknown): QlooEntity | null {
   return {
     id,
     name,
-    type: types[0] ?? asString(e.type) ?? 'unknown',
+    // Insights entities carry a bare `type` of "urn:entity" (no kind), so only a full urn:entity:<kind> counts.
+    type: [types[0], asString(e.type)].find((t) => t?.startsWith('urn:entity:')) ?? 'unknown',
     description: asString(properties.description) ?? asString(e.description),
     tags,
     affinity: affinity === undefined ? undefined : Math.max(0, Math.min(1, affinity)),
@@ -84,11 +86,18 @@ export function normalizeEntity(raw: unknown): QlooEntity | null {
   }
 }
 
-/** Pulls the entity list out of the two response shapes Qloo uses (`results` array, or `results.entities`). */
-export function extractEntities(body: unknown): QlooEntity[] {
-  const results = asRecord(body).results
+/**
+ * Pulls the entity list out of the response shapes Qloo and the harness produce: `{ results: [...] }`,
+ * `{ results: { entities: [...] } }` and the bare array that `qloo api ... --json` prints. Insights entities carry no
+ * `types`, so the caller can pass the requested type as the fallback.
+ */
+export function extractEntities(body: unknown, fallbackType?: string): QlooEntity[] {
+  const results = Array.isArray(body) ? body : asRecord(body).results
   const list = Array.isArray(results) ? results : Array.isArray(asRecord(results).entities) ? (asRecord(results).entities as unknown[]) : []
-  return list.map(normalizeEntity).filter((e): e is QlooEntity => e !== null)
+  return list
+    .map(normalizeEntity)
+    .filter((e): e is QlooEntity => e !== null)
+    .map((e) => (e.type === 'unknown' && fallbackType ? { ...e, type: fallbackType } : e))
 }
 
 /** Runs one command and returns its stdout. A fake stands in for it in tests. */
@@ -109,6 +118,8 @@ export interface QlooHarnessOptions {
   timeoutMs?: number
   /** The event credential. It goes to the child process through the environment, never on the command line. */
   apiKey?: string
+  /** Default https://hackathon.api.qloo.com. */
+  baseUrl?: string
   run?: RunCommand
 }
 
@@ -133,12 +144,16 @@ export class QlooHarnessClient implements QlooLike {
   async insights(opts: { category: Category; seedEntityIds?: string[]; take?: number }): Promise<QlooEntity[]> {
     const args = ['api', 'insights', '--type', QLOO_TYPE[opts.category], '--take', String(Math.min(opts.take ?? 8, 50)), '--json']
     if (opts.seedEntityIds?.length) args.push('--signal-entities', opts.seedEntityIds.join(','))
-    return extractEntities(await this.call(args))
+    return extractEntities(await this.call(args), QLOO_TYPE[opts.category])
   }
 
   private async call(args: string[]): Promise<unknown> {
     const env: NodeJS.ProcessEnv = { ...process.env }
     if (this.options.apiKey) env.QLOO_API_KEY = this.options.apiKey
+    // The harness refuses a custom endpoint unless it is also named as trusted.
+    const base = (this.options.baseUrl || DEFAULT_BASE).replace(/\/+$/, '')
+    env.QLOO_BASE_URL = base
+    env.QLOO_TRUSTED_BASE_URL = base
     let out: string
     try {
       out = await this.run(this.bin, args, env, this.options.timeoutMs ?? 30_000)
@@ -155,10 +170,27 @@ export class QlooHarnessClient implements QlooLike {
   }
 }
 
-/** Harness by default (the supported route); `QLOO_TRANSPORT=rest` uses the direct client below. */
+/** Direct REST client (`QLOO_TRANSPORT=rest`) or the harness (`QLOO_TRANSPORT=harness`). */
 export function createQloo(env: NodeJS.ProcessEnv = process.env): QlooLike {
   if (env.QLOO_TRANSPORT === 'rest') return new QlooClient({ apiKey: env.QLOO_API_KEY ?? '', baseUrl: env.QLOO_BASE_URL })
-  return new QlooHarnessClient({ bin: env.QLOO_BIN, apiKey: env.QLOO_API_KEY })
+  return new QlooHarnessClient({ bin: env.QLOO_BIN, apiKey: env.QLOO_API_KEY, baseUrl: env.QLOO_BASE_URL })
+}
+
+/** True when the harness binary answers `--version`. */
+export type HarnessProbe = (bin: string) => Promise<boolean>
+const probeHarness: HarnessProbe = (bin) =>
+  new Promise((resolve) => execFile(bin, ['--version'], { timeout: 10_000, windowsHide: true }, (error) => resolve(!error)))
+
+/**
+ * What the server uses. `QLOO_TRANSPORT=harness|rest` is taken as given. Left unset, it picks the harness (the route
+ * the event kit lists as supported) when it is installed, and the documented REST call to the hackathon host otherwise,
+ * and says which in `transport`.
+ */
+export async function createQlooAuto(env: NodeJS.ProcessEnv = process.env, probe: HarnessProbe = probeHarness): Promise<{ client: QlooLike; transport: 'harness' | 'rest' }> {
+  if (env.QLOO_TRANSPORT === 'rest') return { client: createQloo(env), transport: 'rest' }
+  if (env.QLOO_TRANSPORT === 'harness') return { client: createQloo(env), transport: 'harness' }
+  if (await probe(env.QLOO_BIN || 'qloo')) return { client: createQloo({ ...env, QLOO_TRANSPORT: 'harness' }), transport: 'harness' }
+  return { client: createQloo({ ...env, QLOO_TRANSPORT: 'rest' }), transport: 'rest' }
 }
 
 export class QlooClient implements QlooLike {
@@ -179,7 +211,7 @@ export class QlooClient implements QlooLike {
   async insights(opts: { category: Category; seedEntityIds?: string[]; take?: number }): Promise<QlooEntity[]> {
     const params = new URLSearchParams({ 'filter.type': QLOO_TYPE[opts.category], take: String(Math.min(opts.take ?? 8, 50)) })
     if (opts.seedEntityIds?.length) params.set('signal.interests.entities', opts.seedEntityIds.join(','))
-    return extractEntities(await this.get('/v2/insights', params))
+    return extractEntities(await this.get('/v2/insights', params), QLOO_TYPE[opts.category])
   }
 
   private async get(path: string, params: URLSearchParams): Promise<unknown> {

@@ -1,13 +1,14 @@
 // Makes three real calls to each service and prints what came back (never the keys). The output is what
 // docs/API-NOTES.md records. Usage: npm run probe   with QLOO_API_KEY and NEBIUS_API_KEY in .env
-import { createQloo } from '../src/qloo.ts'
+import { createQlooAuto } from '../src/qloo.ts'
 import { resolveModels } from '../src/llm.ts'
 
 const qlooKey = process.env.QLOO_API_KEY
 const nebiusKey = process.env.NEBIUS_API_KEY
 if (!qlooKey || !nebiusKey) throw new Error('Set QLOO_API_KEY and NEBIUS_API_KEY in .env first.')
 
-const qloo = createQloo(process.env)
+const { client: qloo, transport } = await createQlooAuto(process.env)
+console.log('Qloo transport:', transport)
 console.log('--- Qloo');
 for (const q of ['Spirited Away', 'Radiohead', 'Blue Bottle Coffee']) {
   const hits = await qloo.searchEntities(q, { take: 2 })

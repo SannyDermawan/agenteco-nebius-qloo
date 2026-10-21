@@ -44,3 +44,18 @@ Source: docs.tokenfactory.nebius.com (quickstart, API reference index).
 ## Live probe results
 
 (empty until `npm run probe` has run with real keys)
+
+
+## Confirmed live on 21 Oct 2026 (hackathon key)
+
+| Check | Result |
+|---|---|
+| Host | The key works only against `https://hackathon.api.qloo.com`; `api.qloo.com` and the staging host answer 401 (Qloo's hackathon developer guide). The client now defaults to the hackathon host |
+| Auth | `X-Api-Key` header, GET, as the client already did |
+| `/search` | `{ results: [ { entity_id, name, types, properties } ] }`; a query can return several kinds ("Spirited Away" is a movie and an album) |
+| `/v2/insights` with `filter.type` and `signal.interests.entities` | `{ success, results: { entities: [ ... ] } }` with `query.affinity` (0 to 1), `popularity`, tags and a description. Entities have **no `types`** and a bare `type` of `urn:entity`, so the requested kind is filled in by the client |
+| Cross-domain signal | A movie seed with `filter.type=urn:entity:book` works (American Gods, Stardust) |
+| Insights without any signal | HTTP 400. The agent already treats a failing category as "no data" |
+| Video games | The type is `urn:entity:video_game` (not `videogame`); fixed |
+| Harness | `qloo api search` and `qloo api insights --json` print a **bare array**; the harness needs `QLOO_BASE_URL` and `QLOO_TRUSTED_BASE_URL` set to the hackathon host, which `QlooHarnessClient` does. The client reads both shapes |
+| Transport | Left unset, the server uses the harness when `qloo` is installed and REST otherwise, and logs which |

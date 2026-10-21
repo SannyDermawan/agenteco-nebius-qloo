@@ -73,8 +73,9 @@ Registering a capability writes to the shared AgentEco API, so it is a deliberat
 
 ## Honest status
 
-- The code, tests and demo are complete and pass without network access.
-- At the time of writing no Qloo or Nebius key was available, so the live calls follow the documentation but have not been exercised. The harness commands used here (`qloo api search`, `qloo api insights`) were checked against `--help` and `--dry-run` of @qloo/qloo-harness 0.1.26, not against Qloo: `docs/API-NOTES.md` lists exactly what is confirmed and what is assumed. Run `npm run probe` first.
-- The escrow cycle (`seller` and `hire-demo`) has not been run yet for the same reason.
+- The code, tests and demo are complete; 23 tests pass without network access or keys.
+- **Qloo has been called for real (21 Oct 2026)** with the hackathon key: entity search, Insights for a movie seed (Spirited Away returned Howl's Moving Castle, My Neighbor Totoro, Princess Mononoke, Castle in the Sky, Nausicaa), and a cross-domain call (movie seed, book results). What was checked and what was fixed because of it is in `docs/API-NOTES.md`. Both routes work: the REST call to `https://hackathon.api.qloo.com` and the `qloo api` harness.
+- **Nebius Token Factory has not been called yet** (no API key: the account needs billing details first). The Nemotron model ids and the two-model flow are untested against the real service.
+- The full agent (intent, Qloo, Nemotron, verification) has not run end to end with real services yet, and the escrow cycle (`seller` and `hire-demo`) has not been run.
 
 License: MIT (see the repository `LICENSE`).

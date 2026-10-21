@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { QlooClient, QlooHarnessClient, QlooError, createQloo, extractEntities, normalizeEntity } from '../src/qloo.ts'
+import { QlooClient, QlooHarnessClient, QlooError, createQloo, createQlooAuto, extractEntities, normalizeEntity } from '../src/qloo.ts'
 import { pickNemotronModels, resolveModels } from '../src/llm.ts'
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
@@ -93,4 +93,37 @@ test('QlooHarnessClient explains a missing harness and bad output', async () => 
 test('createQloo picks the harness by default and REST only when asked', () => {
   assert.ok(createQloo({ QLOO_API_KEY: 'k' }) instanceof QlooHarnessClient)
   assert.ok(createQloo({ QLOO_API_KEY: 'k', QLOO_TRANSPORT: 'rest' }) instanceof QlooClient)
+})
+
+test('extractEntities reads the bare array the harness prints and fills in the requested type for insights', () => {
+  const bare = [{ entity_id: 'a', name: 'Howl', query: { affinity: 0.97 } }, { name: 'no id' }]
+  const out = extractEntities(bare, 'urn:entity:movie')
+  assert.equal(out.length, 1)
+  assert.equal(out[0]!.type, 'urn:entity:movie')
+  assert.equal(extractEntities([{ entity_id: 'a', name: 'X', types: ['urn:entity:book'] }], 'urn:entity:movie')[0]!.type, 'urn:entity:book', 'a type Qloo gave is kept')
+})
+
+test('the default host is the hackathon host and the harness is told to trust exactly that endpoint', async () => {
+  const seen: { url: string }[] = []
+  const fetchImpl = (async (url: string) => { seen.push({ url: String(url) }); return json({ results: [] }) }) as unknown as typeof fetch
+  await new QlooClient({ apiKey: 'k', fetchImpl }).searchEntities('x')
+  assert.equal(new URL(seen[0]!.url).origin, 'https://hackathon.api.qloo.com')
+  let childEnv: NodeJS.ProcessEnv = {}
+  await new QlooHarnessClient({ apiKey: 'k', run: async (_f, _a, env) => { childEnv = env; return '[]' } }).searchEntities('x')
+  assert.equal(childEnv.QLOO_BASE_URL, 'https://hackathon.api.qloo.com')
+  assert.equal(childEnv.QLOO_TRUSTED_BASE_URL, 'https://hackathon.api.qloo.com')
+})
+
+test('createQlooAuto uses the harness when installed and REST otherwise, and obeys an explicit choice', async () => {
+  const yes = async () => true
+  const no = async () => false
+  assert.equal((await createQlooAuto({ QLOO_API_KEY: 'k' }, yes)).transport, 'harness')
+  assert.equal((await createQlooAuto({ QLOO_API_KEY: 'k' }, no)).transport, 'rest')
+  assert.equal((await createQlooAuto({ QLOO_API_KEY: 'k', QLOO_TRANSPORT: 'rest' }, yes)).transport, 'rest')
+  assert.equal((await createQlooAuto({ QLOO_API_KEY: 'k', QLOO_TRANSPORT: 'harness' }, no)).transport, 'harness')
+})
+
+test('an insights entity with a bare urn:entity type gets the requested kind', () => {
+  const out = extractEntities({ results: [{ entity_id: 'a', name: 'Howl', type: 'urn:entity' }] }, 'urn:entity:movie')
+  assert.equal(out[0]!.type, 'urn:entity:movie')
 })
