@@ -64,8 +64,8 @@ Without keys the demo runs in a **labelled sample mode** (fixed examples, ids th
 ## Honest status
 
 - Code, tests and demo are complete and pass without network access.
-- At the time of this commit no Qloo or Nebius key had been used, so the live calls follow the documentation and have not been exercised. [API-NOTES.md](taste-concierge/docs/API-NOTES.md) lists what is confirmed and what is assumed. Run `npm run probe` first.
-- The escrow cycle (`seller` and `hire-demo`) has not been run yet for the same reason.
+- **Both services have been called for real (21 Oct 2026).** Qloo (hackathon key): entity search, Insights with a movie seed (Spirited Away gave Howl's Moving Castle, My Neighbor Totoro, Princess Mononoke), a cross-domain call (movie seed, book results). Nebius Token Factory: 28 models listed, 5 Nemotron, and the agent picked `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (fast) and `nvidia/Nemotron-3-Ultra-550b-a55b` (reasoning). The whole agent ran end to end on two requests (movies from Ghibli seeds; artists and books from Radiohead and Beck, about 10 and 18 seconds); every recommendation came from Qloo's own list. What each check found, and the bugs it exposed, is in `taste-concierge/docs/API-NOTES.md`.
+- The escrow cycle (`seller` and `hire-demo`) has not been run yet: it needs a funded testnet wallet.
 - AgentEco runs on test networks only, no real money, and has no real users outside the team.
 
 ## Project history

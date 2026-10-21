@@ -74,8 +74,7 @@ Registering a capability writes to the shared AgentEco API, so it is a deliberat
 ## Honest status
 
 - The code, tests and demo are complete; 23 tests pass without network access or keys.
-- **Qloo has been called for real (21 Oct 2026)** with the hackathon key: entity search, Insights for a movie seed (Spirited Away returned Howl's Moving Castle, My Neighbor Totoro, Princess Mononoke, Castle in the Sky, Nausicaa), and a cross-domain call (movie seed, book results). What was checked and what was fixed because of it is in `docs/API-NOTES.md`. Both routes work: the REST call to `https://hackathon.api.qloo.com` and the `qloo api` harness.
-- **Nebius Token Factory has not been called yet** (no API key: the account needs billing details first). The Nemotron model ids and the two-model flow are untested against the real service.
-- The full agent (intent, Qloo, Nemotron, verification) has not run end to end with real services yet, and the escrow cycle (`seller` and `hire-demo`) has not been run.
+- **Both services have been called for real (21 Oct 2026).** Qloo (hackathon key): entity search, Insights with a movie seed (Spirited Away gave Howl's Moving Castle, My Neighbor Totoro, Princess Mononoke), a cross-domain call (movie seed, book results). Nebius Token Factory: 28 models listed, 5 Nemotron, and the agent picked `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (fast) and `nvidia/Nemotron-3-Ultra-550b-a55b` (reasoning). The whole agent ran end to end on two requests (movies from Ghibli seeds; artists and books from Radiohead and Beck, about 10 and 18 seconds); every recommendation came from Qloo's own list. What each check found, and the bugs it exposed, is in `taste-concierge/docs/API-NOTES.md`.
+- The escrow cycle (`seller` and `hire-demo`) has not been run yet: it needs a funded testnet wallet. The live demo is not hosted yet.
 
 License: MIT (see the repository `LICENSE`).
