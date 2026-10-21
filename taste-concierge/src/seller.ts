@@ -1,18 +1,18 @@
 import { createSellerAgent, registerCapability, resolveCapability, DEFAULT_API_URL } from '@agenteco/sdk'
 import { createEngine } from './engine.ts'
+import { parseWalletKey } from './wallet-key.ts'
 import { briefSchema, CAPABILITY_ID } from './types.ts'
 
 /**
  * Sells "taste_recommendations" on AgentEco: a buyer escrows a small amount, this agent answers from Qloo's taste graph with
  * Nemotron on Nebius, and the buyer accepts or disputes. Run it with a testnet wallet:
  *
- *   WALLET_PRIVATE_KEY=0x... npm run seller
+ *   WALLET_PRIVATE_KEY=<Solana secret key (base58) or 0x... EVM key> npm run seller
  *
  * It publishes the capability to the open registry only if nobody has. Registering is a write to the shared API, so this
  * script is something the maintainer runs on purpose; it is never run by the tests or the demo server.
  */
-const privateKey = process.env.WALLET_PRIVATE_KEY as `0x${string}` | undefined
-if (!privateKey) throw new Error('Missing WALLET_PRIVATE_KEY in .env (a testnet wallet).')
+const privateKey = parseWalletKey(process.env.WALLET_PRIVATE_KEY)
 const apiUrl = process.env.AGENTECO_API_URL ?? DEFAULT_API_URL
 
 const engine = await createEngine()

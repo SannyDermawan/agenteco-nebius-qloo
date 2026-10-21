@@ -5,7 +5,9 @@
   "description": "An AgentEco seller agent that recommends from Qloo's taste graph and reasons with NVIDIA Nemotron on Nebius Token Factory.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=22.9" },
+  "engines": {
+    "node": ">=22.9"
+  },
   "scripts": {
     "start": "tsx --env-file-if-exists=.env src/server.ts",
     "seller": "tsx --env-file-if-exists=.env src/seller.ts",
@@ -16,8 +18,8 @@
     "test": "node --import tsx --test \"test/**/*.test.ts\""
   },
   "dependencies": {
-    "@agenteco/sdk": "^0.1.2",
-    "zod": "^4.6.5"
+    "@agenteco/sdk": "file:../agent-runtime",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

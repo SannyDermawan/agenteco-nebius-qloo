@@ -127,3 +127,21 @@ test('an insights entity with a bare urn:entity type gets the requested kind', (
   const out = extractEntities({ results: [{ entity_id: 'a', name: 'Howl', type: 'urn:entity' }] }, 'urn:entity:movie')
   assert.equal(out[0]!.type, 'urn:entity:movie')
 })
+
+test('parseWalletKey accepts an EVM key, a base58 Solana key and a JSON array, and refuses anything else', async () => {
+  const { parseWalletKey, base58Decode } = await import('../src/wallet-key.ts')
+  const evm = '0x' + 'ab'.repeat(32)
+  assert.equal(parseWalletKey(evm), evm)
+  const bytes = Uint8Array.from({ length: 64 }, (_, i) => (i * 7 + 3) % 256)
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  let n = BigInt('0x' + Buffer.from(bytes).toString('hex'))
+  let b58 = ''
+  while (n > 0n) { b58 = ALPHABET[Number(n % 58n)] + b58; n /= 58n }
+  assert.deepEqual(parseWalletKey(b58), bytes)
+  assert.deepEqual(parseWalletKey(JSON.stringify(Array.from(bytes))), bytes)
+  assert.deepEqual(base58Decode('11' + b58.slice(0, 5)).slice(0, 2), Uint8Array.from([0, 0]), 'leading 1s are zero bytes')
+  assert.throws(() => parseWalletKey(undefined), /Missing WALLET_PRIVATE_KEY/)
+  assert.throws(() => parseWalletKey('0x1234'), /32 bytes of hex/)
+  assert.throws(() => parseWalletKey('abc'), /must be an EVM key/)
+  assert.throws(() => parseWalletKey('not*base58'), /not valid base58/)
+})

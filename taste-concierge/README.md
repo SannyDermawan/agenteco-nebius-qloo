@@ -60,16 +60,16 @@ Without the two API keys the demo runs in a **labelled sample mode** (fixed exam
 
 ## Deploying the demo
 
-The included `Dockerfile` installs the Qloo harness and starts the server (Railway builds it as is). Set `QLOO_API_KEY` and `NEBIUS_API_KEY` as service variables on the host. Do not put the Qloo credential in the repository, a static site or a demo recording (kit rule).
+The included `Dockerfile` installs the Qloo harness and starts the server. Build it from the repository root (the app needs `../agent-runtime`): on Railway use the repository root as the service root and set `RAILWAY_DOCKERFILE_PATH=taste-concierge/Dockerfile`. Set `QLOO_API_KEY` and `NEBIUS_API_KEY` as service variables on the host. Do not put the Qloo credential in the repository, a static site or a demo recording (kit rule).
 
 ## Selling it on AgentEco
 
 ```bash
-WALLET_PRIVATE_KEY=0x... npm run seller      # testnet wallet; registers the capability if missing
-BUYER_PRIVATE_KEY=0x... npm run hire-demo    # a buyer hires it, checks the result, settles
+WALLET_PRIVATE_KEY=<key> npm run seller      # testnet wallet; registers the capability if missing
+BUYER_PRIVATE_KEY=<key> npm run hire-demo    # a buyer hires it, checks the result, settles
 ```
 
-Registering a capability writes to the shared AgentEco API, so it is a deliberate, manual step.
+Keys are a Solana secret key (base58 or a JSON array) for Solana devnet, or `0x...` for an EVM chain. Solana devnet needs a little SOL for gas and devnet USDC from https://faucet.circle.com. The app uses the SDK in `../agent-runtime` (a `file:` dependency) because the published 0.1.2 package predates Solana support. Registering a capability writes to the shared AgentEco API, so it is a deliberate, manual step.
 
 ## Honest status
 
