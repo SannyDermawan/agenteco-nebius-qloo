@@ -25,13 +25,20 @@ button[disabled]{opacity:.6;cursor:wait}
 code{font-size:.8rem;background:var(--line);padding:1px 6px;border-radius:6px}
 details{margin-top:24px;color:var(--mut)}summary{cursor:pointer}
 ul.notes{padding-left:18px}
+#agenteco{margin-top:36px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+#agenteco h2{margin:0 0 4px;font-size:1.25rem}
+#agenteco .tag{display:inline-block;margin:0 0 10px;padding:2px 10px;border-radius:99px;background:var(--acc);color:var(--accfg);font-size:.78rem;font-weight:700}
+#agenteco ol{margin:12px 0;padding-left:20px}#agenteco li{margin:4px 0}
+#agenteco .proof{margin:14px 0;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;font-size:.92rem}
+#agenteco .note{color:var(--warn);background:var(--warnbg);border-radius:10px;padding:10px 12px;font-size:.88rem}
+#agenteco a{color:var(--acc);font-weight:600}
 @media (max-width:480px){h1{font-size:1.6rem}}
 </style>
 </head>
 <body>
 <main>
   <h1>Taste Concierge</h1>
-  <p class="lead">Describe what you like. Recommendations come from the Qloo taste graph and are explained by NVIDIA Nemotron on Nebius Token Factory. An AgentEco seller agent, paid through escrow on a test network.</p>
+  <p class="lead">Describe what you like. Recommendations come from the Qloo taste graph and are explained by NVIDIA Nemotron on Nebius Token Factory. An AgentEco seller agent: see below for how it is hired through escrow.</p>
   <form id="f">
     <label for="q" hidden>Your taste</label>
     <textarea id="q" maxlength="500" placeholder="I loved Spirited Away and Princess Mononoke. What should I watch next?"></textarea>
@@ -40,6 +47,19 @@ ul.notes{padding-left:18px}
   <div class="chips" id="chips"></div>
   <div id="mode" hidden></div>
   <div id="out" aria-live="polite"></div>
+  <section id="agenteco">
+    <span class="tag">AGENTECO SELLER AGENT</span>
+    <h2>Hire this agent through AgentEco</h2>
+    <p>Taste Concierge is built as an agent that <a href="https://www.agenteco.web.id" target="_blank" rel="noopener">AgentEco</a>, an escrow marketplace for AI agents, can hire. The buyer does not have to trust the agent, and the agent does not have to trust the buyer:</p>
+    <ol>
+      <li><b>Find and agree.</b> The buyer agent finds the seller and they negotiate the price.</li>
+      <li><b>Lock.</b> The buyer locks the price in an escrow contract before any work starts.</li>
+      <li><b>Deliver.</b> This agent runs the pipeline above and delivers a schema-checked result.</li>
+      <li><b>Settle or dispute.</b> The buyer checks the result and settles, or opens a dispute that an arbiter rules on.</li>
+    </ol>
+    <div class="proof"><b>A real run, 21 Oct 2026, Solana devnet:</b> the price was negotiated (0.04 offered, 0.06 agreed), escrow #6 was funded in devnet USDC, the agent delivered four Qloo-grounded recommendations, and the buyer settled. The script that runs this cycle is <a href="https://github.com/SannyDermawan/agenteco-nebius-qloo/blob/main/taste-concierge/scripts/hire-demo.ts" target="_blank" rel="noopener">scripts/hire-demo.ts</a>.</div>
+    <p class="note">Honest note: this page runs the same agent <b>without escrow</b> so anyone can try it without a wallet. The escrow cycle above is a recorded run on test networks with test tokens. The agent is not listed on the live AgentEco marketplace yet.</p>
+  </section>
   <details><summary>How it works</summary>
     <p>1. A small Nemotron model reads your request. 2. Qloo resolves what you already like and returns similar entities. 3. A larger Nemotron model picks and explains. 4. The agent checks every pick against what Qloo returned, so it cannot recommend something Qloo did not give it.</p>
   </details>

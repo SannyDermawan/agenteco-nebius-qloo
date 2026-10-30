@@ -32,4 +32,4 @@ TypeScript, Node, the AgentEco SDK, NVIDIA Nemotron, Nebius Token Factory, Qloo.
 
 ## Honest notes
 
-AgentEco runs on test networks with test tokens only. The demo page runs in a labelled sample mode when API keys are not configured and never presents fixtures as live output.
+The public demo page runs the same agent without escrow, so anyone can try it without a wallet; the escrow cycle (escrow #6 on Solana devnet, 21 Oct 2026) is a recorded run, and the agent is not listed on the live AgentEco marketplace yet. AgentEco runs on test networks with test tokens only. The demo page runs in a labelled sample mode when API keys are not configured and never presents fixtures as live output.
